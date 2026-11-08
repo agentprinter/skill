@@ -1,0 +1,15 @@
+{
+  "name": "agentprinter",
+  "description": "AgentPrinter: send physical mail from your agent.",
+  "owner": {
+    "name": "AgentPrinter",
+    "url": "https://agentprinter.app"
+  },
+  "plugins": [
+    {
+      "name": "agentprinter",
+      "source": "./",
+      "category": "productivity"
+    }
+  ]
+}

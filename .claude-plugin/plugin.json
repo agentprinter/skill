@@ -1,0 +1,13 @@
+{
+  "name": "agentprinter",
+  "displayName": "AgentPrinter",
+  "description": "Send a real letter or postcard to a US address from your agent. No account or API key: the sender pays per piece through a Stripe link.",
+  "author": {
+    "name": "AgentPrinter",
+    "url": "https://agentprinter.app"
+  },
+  "homepage": "https://agentprinter.app",
+  "repository": "https://github.com/agentprinter/skill",
+  "license": "MIT",
+  "keywords": ["mail", "letter", "postcard", "usps", "print", "physical-mail"]
+}
