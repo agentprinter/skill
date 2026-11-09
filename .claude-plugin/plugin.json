@@ -9,6 +9,10 @@
   },
   "homepage": "https://agentprinter.app",
   "repository": "https://github.com/agentprinter/skill",
+  "documentationUrl": "https://agentprinter.app/llms-full.txt",
+  "supportUrl": "https://github.com/agentprinter/skill/issues",
+  "privacyPolicyUrl": "https://agentprinter.app/privacy",
+  "termsOfServiceUrl": "https://agentprinter.app/terms",
   "license": "MIT",
   "keywords": [
     "mail",
