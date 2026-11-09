@@ -23,6 +23,18 @@ npx skills add agentprinter/skill
 
 The agent needs to make outbound HTTPS requests (with `curl` or an HTTP tool). Calls from a browser sandbox or canvas are blocked.
 
+## What it runs and sends
+
+The skill is instructions for the agent. It installs nothing and runs no code of its own: no downloads, no scripts, no hooks.
+
+When you ask to send mail, the agent makes HTTPS requests to `api.agentprinter.app`, with `curl` or its own HTTP tool. A request to send a piece carries:
+
+- the document: your text, a link to a PDF, or the PDF itself (for a PDF on your computer, the agent reads the file and sends it),
+- the recipient's name and address, and your return address,
+- the options you choose, and a webhook URL if you give one. AgentPrinter then sends status updates for the piece to that URL.
+
+Other requests read the status of a piece, cancel it, or pass on feedback you ask the agent to send. AgentPrinter uses Lob to verify addresses and to print and mail, and Stripe for payment. The [privacy policy](https://agentprinter.app/privacy) says what is kept and for how long.
+
 ## Use it
 
 Ask in plain words:
