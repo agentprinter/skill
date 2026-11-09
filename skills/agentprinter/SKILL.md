@@ -1,29 +1,52 @@
 ---
 name: agentprinter
-description: Send physical mail (a real letter or postcard) to a US address via the AgentPrinter API. Use when the user wants to mail, post, or send a physical document, letter, postcard, invoice, notice, or reminder to a street address — e.g. "mail this letter to Jane", "send a postcard to my mom", "post this invoice to a client". No account or API key is required; the user completes a one-time Stripe payment per piece.
+description: Send physical mail (a real letter or postcard) to a US address via AgentPrinter, with its MCP tools or its HTTP API. Use when the user wants to mail, post, or send a physical document, letter, postcard, invoice, notice, or reminder to a street address — e.g. "mail this letter to Jane", "send a postcard to my mom", "post this invoice to a client". No account or API key is required; the user completes a one-time Stripe payment per piece.
 ---
 
 # AgentPrinter — Send Physical Mail
 
 AgentPrinter turns a document + a US mailing address into a real letter or postcard
-dropped in the mail. It is account-free: you create a job with a single HTTP call,
-hand the user a Stripe payment link, and the mail is printed and shipped (USPS First
-Class) once they pay.
+dropped in the mail. It is account-free: you create a job with one tool call or one
+HTTP call, hand the user a Stripe payment link, and the mail is printed and shipped
+(USPS First Class) once they pay.
 
-- **Base URL:** `https://api.agentprinter.app/v1`
+- **MCP server:** `https://api.agentprinter.app/mcp`
+- **HTTP base URL:** `https://api.agentprinter.app/v1`
 - **No authentication** required to create a job.
 - **US recipient addresses only.**
 
-## Critical constraint — make the call directly
+## Two ways to call it — use the MCP tools when you have them
 
-You **must** make the HTTP request as a direct tool/function call (e.g. Bash `curl`,
-fetch in a code tool, or an HTTP request tool). Do **NOT** attempt the call from a
-browser artifact, canvas, or sandboxed iframe — Content Security Policy will block it.
+**MCP tools.** If you have AgentPrinter's tools (`create_mail_job` and the others below;
+the AgentPrinter plugin and connector add them), use them instead of HTTP. They take the
+same `document`, `recipient`, `from` and `options` as the HTTP API in this skill, with the
+same rules, prices and error codes, but rate limits of their own. A refusal comes back as a
+tool result with the error code and a message to repeat to the user. A request refused
+before it reaches a tool comes back as an error from the MCP client instead: for "too many
+requests" ("Rate limit exceeded"), wait and try again (`retry_after` gives the seconds,
+when the client shows it); for a request that is too large or
+malformed, don't retry it unchanged. For safe retries, `create_mail_job` takes an
+`idempotency_key` argument in place of the header. The tools take no `webhook_url`:
+follow a job with `get_mail_job`.
 
-If you cannot make outbound HTTP requests at all (common on mobile/iOS apps or sandboxed
-environments), do not guess or fake a result. Tell the user to repeat the request from a
-browser-based session (claude.ai, chatgpt.com, or any web LLM that can call APIs), and
-echo back the details they gave you so they can paste them in.
+| Step | MCP tool | HTTP |
+|---|---|---|
+| Check a price or layout, no job | `preview_mail` | `POST /v1/preview` |
+| Create a job and get its pay link | `create_mail_job` | `POST /v1/print` |
+| Change an unpaid job | `revise_mail_job` | `PATCH /v1/jobs/:id` |
+| Check a job | `get_mail_job` | `GET /v1/jobs/:id` |
+| Cancel a job | `cancel_mail_job` | `DELETE /v1/jobs/:id` |
+| Pass on feedback | `send_feedback` | `POST /v1/jobs/:id/feedback` |
+
+**HTTP.** Otherwise, make the HTTP requests in this skill as a direct tool/function call
+(e.g. Bash `curl`, fetch in a code tool, or an HTTP request tool). Do **NOT** make them
+from a browser artifact, canvas, or sandboxed iframe — Content Security Policy blocks them.
+
+If you have neither the tools nor outbound HTTP (common on mobile/iOS apps or sandboxed
+environments), do not guess or fake a result. Tell the user they can add AgentPrinter
+to their client as a connector (`https://api.agentprinter.app/mcp`, no account or key),
+or repeat the request from a session that can call APIs, and echo back the details they
+gave you so they can paste them in.
 
 ## Workflow
 
@@ -31,16 +54,18 @@ echo back the details they gave you so they can paste them in.
    Ask for the return address if you don't have it; never make one up. Confirm any missing required
    fields (see below) before sending. If the user didn't specify, default to a B&W
    `letter`.
-2. **Create the job** — `POST /v1/print` (see Quick start). The API verifies the address
-   and counts pages before returning.
+2. **Create the job** — `create_mail_job`, or `POST /v1/print` (see Quick start). The API
+   verifies the address and counts pages before returning.
 3. **Give the user the `pay_url`.** This is a short, branded link that forwards to Stripe
    Checkout — prefer it over the raw `payment_url`. Payment is required before anything is
-   printed. Also share the `status_url` so they can track delivery in a browser. The link
-   expires in ~4 hours; the job moves to `expired` if unpaid.
-4. **Track status** — either pass a `webhook_url` to receive push updates, or poll
-   `GET /v1/jobs/:id`. Don't poll aggressively (read limit is 60/IP/hour).
-5. **Cancel if needed** — `DELETE /v1/jobs/:id`, allowed only before fulfillment and
-   within 30 minutes of creation.
+   printed. Also share the `status_url`, when the result shows it, so they can track
+   delivery in a browser. The pay link expires in ~4 hours; the job moves to `expired`
+   if unpaid.
+4. **Track status** — `get_mail_job`; over HTTP, either pass a `webhook_url` to receive
+   push updates, or poll `GET /v1/jobs/:id` (the HTTP read limit is 60/IP/hour). Don't
+   poll aggressively either way.
+5. **Cancel if needed** — `cancel_mail_job` or `DELETE /v1/jobs/:id`, allowed only before
+   fulfillment and within 30 minutes of creation. Ask the user first: it can't be undone.
 
 ## Quick start
 
@@ -165,7 +190,8 @@ each with its time. Once submitted you may also get `expected_delivery`, and
 
 ## Passing on feedback (`POST /v1/jobs/:id/feedback`)
 
-If the user wants to tell AgentPrinter something about a paid job (or the service), send it:
+If the user wants to tell AgentPrinter something about a paid job (or the service), send it
+(MCP: `send_feedback` with `job_id`, `message` and `rating`):
 
 ```bash
 curl -sS -X POST https://api.agentprinter.app/v1/jobs/job_abc123def456/feedback \

@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "agentprinter": {
+      "type": "http",
+      "url": "https://api.agentprinter.app/mcp"
+    }
+  }
+}
