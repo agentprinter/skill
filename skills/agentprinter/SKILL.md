@@ -225,7 +225,10 @@ send what the user asks you to.
   (`details.fonts` names them), which the printer refuses. Make the PDF again with all
   fonts embedded (printing it to a new PDF does this) and resend, or ask the user to.
 - **429** — rate limited. Back off for the seconds in `retry_after` in the body (the
-  `Retry-After` header has the same number); `error` is `rate_limited`. A request refused with 400 or 422 counts toward the limit too.
+  `Retry-After` header has the same number); `error` is `rate_limited`. Over HTTP the write
+  limit is 10 per IP per hour: `POST /v1/print`, `POST /v1/preview`, `PATCH /v1/jobs/:id`
+  and `DELETE /v1/jobs/:id`, counted together. A write refused with 400 or 422 counts
+  toward it too, so correct a request before you send it again.
 - **Timeouts and retries** — send an `Idempotency-Key` header set to a fresh random UUID
   on `POST /v1/print` (keys are shared across all clients). Retrying with the same key and
   body returns the same job, not a second one. 409 `idempotency_key_in_progress` means the
