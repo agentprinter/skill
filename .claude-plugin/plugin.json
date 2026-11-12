@@ -1,7 +1,7 @@
 {
   "name": "agentprinter",
   "displayName": "AgentPrinter",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "Send a real letter or postcard to a US address from your agent: a skill plus AgentPrinter's MCP server. No account or API key: the sender pays per piece through a Stripe link.",
   "author": {
     "name": "AgentPrinter",
@@ -9,7 +9,7 @@
   },
   "homepage": "https://agentprinter.app",
   "repository": "https://github.com/agentprinter/skill",
-  "documentationUrl": "https://agentprinter.app/llms-full.txt",
+  "documentationUrl": "https://agentprinter.app/docs",
   "supportUrl": "https://github.com/agentprinter/skill/issues",
   "privacyPolicyUrl": "https://agentprinter.app/privacy",
   "termsOfServiceUrl": "https://agentprinter.app/terms",
